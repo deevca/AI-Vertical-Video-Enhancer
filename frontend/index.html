@@ -1,0 +1,477 @@
+<!-- This is the HTML template for the Vertical Video Enhancer web application -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertical Video Enhancer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .preview-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .video-preview {
+            width: 100%;
+            height: auto;
+        }
+        
+        .progress-container {
+            height: 25px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        #upload-form {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .processing-indicator {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .result-container {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .phone-mockup {
+            width: 320px;
+            margin: 0 auto;
+            background-color: #000;
+            border-radius: 36px;
+            padding: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        
+        .phone-screen {
+            border-radius: 30px;
+            overflow: hidden;
+            background-color: #000;
+            aspect-ratio: 9/16;
+        }
+        
+        .phone-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .extension-diagram {
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        
+        .extension-diagram img {
+            width: 100%;
+            height: auto;
+        }
+        
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .form-range {
+            border-radius: 5px;
+        }
+        
+        .form-range::-webkit-slider-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+        
+        .form-range::-moz-range-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <header class="text-center mb-5">
+            <h1 class="display-4">AI Video Enhancer</h1>
+            <p class="lead">Transform horizontal videos into vertical format with intelligent AI outpainting</p>
+        </header>
+
+        <div class="row mb-5">
+            <div class="col-md-10 mx-auto">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">How It Works</h5>
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <p>This app intelligently transforms your 16:9 horizontal videos into 9:16 vertical format by:</p>
+                                <ol>
+                                    <li>Analyzing frame content to find the best placement</li>
+                                    <li>Automatically positioning the original video optimally</li>
+                                    <li>Using Stable Diffusion AI to generate seamless extensions</li>
+                                    <li>Creating natural-looking vertical videos</li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="extension-diagram">
+                                    <svg viewBox="0 0 300 300" width="300" height="300">
+                                        <!-- Original 16:9 video -->
+                                        <rect x="50" y="100" width="200" height="112.5" fill="#3498db" />
+                                        <text x="150" y="156" text-anchor="middle" fill="white" font-size="14">Original 16:9 Video</text>
+                                        
+                                        <!-- AI-Generated Extensions -->
+                                        <rect x="50" y="25" width="200" height="75" fill="#2ecc71" opacity="0.8" />
+                                        <text x="150" y="60" text-anchor="middle" fill="white" font-size="12">AI-Generated Extension</text>
+                                        
+                                        <rect x="50" y="212.5" width="200" height="75" fill="#e67e22" opacity="0.8" />
+                                        <text x="150" y="250" text-anchor="middle" fill="white" font-size="12">AI-Generated Extension</text>
+                                        
+                                        <!-- Phone outline -->
+                                        <rect x="40" y="10" width="220" height="280" stroke="#333" stroke-width="2" fill="none" rx="10" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Upload Video</h5>
+                    
+                    <div class="mb-3">
+                        <label for="video-file" class="form-label">Select a video file (MP4, MOV, AVI, WEBM)</label>
+                        <input type="file" class="form-control" id="video-file" name="file" accept=".mp4,.mov,.avi,.webm" required>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <small>For best results, use short clips (5-30 seconds) with clear scenes</small>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Smart Processing:</strong> The AI will automatically analyze your video and determine the best placement and extension for optimal results.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="use_keyframes" id="use-keyframes" value="true">
+                            <label class="form-check-label" for="use-keyframes">
+                                Use keyframe processing (faster, less accurate)
+                            </label>
+                        </div>
+                        <small class="text-muted">
+                            Process only select frames and interpolate between them. Faster but may be less accurate.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3 keyframe-options" style="display: none;">
+                        <label for="keyframe-interval" class="form-label">Keyframe Interval: <span id="keyframe-value">24</span></label>
+                        <input type="range" class="form-range" id="keyframe-interval" name="keyframe_interval" min="6" max="48" step="6" value="24">
+                        <small class="text-muted">Process 1 frame every N frames (higher = faster but less accurate)</small>
+                    </div>
+                    
+                    <div class="mb-3 regular-options">
+                        <label for="sample-rate" class="form-label">Sample Rate: <span id="sample-value">1</span></label>
+                        <input type="range" class="form-range" id="sample-rate" name="sample_rate" min="1" max="10" step="1" value="1">
+                        <small class="text-muted">Process 1 out of every N frames (higher = faster but choppier)</small>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary" id="submit-btn">Process Video</button>
+                </div>
+            </div>
+        </form>
+        
+        <div class="processing-indicator" id="processing">
+            <div class="spinner-border text-primary mb-2" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Processing video... This may take several minutes depending on the length of your video.</p>
+            <div class="progress progress-container">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" id="progress-bar"></div>
+            </div>
+        </div>
+        
+        <div class="result-container" id="result">
+            <div class="alert alert-success mb-4">
+                <h5 class="alert-heading">Processing Complete!</h5>
+                <p id="result-message">Your video has been successfully processed.</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">Original Video</div>
+                        <div class="card-body">
+                            <div class="preview-container">
+                                <video id="original-preview" class="video-preview" controls muted>
+                                    <source src="" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">Vertical Enhanced Video</div>
+                        <div class="card-body text-center">
+                            <div class="phone-mockup">
+                                <div class="phone-screen">
+                                    <video id="result-preview" class="phone-video" controls muted loop>
+                                        <source src="" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a id="download-link" href="" class="btn btn-success" download>Download Enhanced Video</a>
+                <button id="new-video-btn" class="btn btn-outline-primary ms-2">Process Another Video</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-4 mt-5 text-muted">
+        <small>© 2025 Vertical Video Enhancer - Made with ❤️ for vertical videos</small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const uploadForm = document.getElementById('upload-form');
+            const videoFileInput = document.getElementById('video-file');
+            const keyframeCheckbox = document.getElementById('use-keyframes');
+            const keyframeOptions = document.querySelector('.keyframe-options');
+            const regularOptions = document.querySelector('.regular-options');
+            const keyframeIntervalInput = document.getElementById('keyframe-interval');
+            const keyframeValueDisplay = document.getElementById('keyframe-value');
+            const sampleRateInput = document.getElementById('sample-rate');
+            const sampleValueDisplay = document.getElementById('sample-value');
+            const processingIndicator = document.getElementById('processing');
+            const resultContainer = document.getElementById('result');
+            const resultMessage = document.getElementById('result-message');
+            const originalPreview = document.getElementById('original-preview');
+            const resultPreview = document.getElementById('result-preview');
+            const downloadLink = document.getElementById('download-link');
+            const newVideoBtn = document.getElementById('new-video-btn');
+            const progressBar = document.getElementById('progress-bar');
+            
+            // Update displays when sliders change
+            keyframeIntervalInput.addEventListener('input', function() {
+                keyframeValueDisplay.textContent = this.value;
+            });
+            
+            sampleRateInput.addEventListener('input', function() {
+                sampleValueDisplay.textContent = this.value;
+            });
+            
+            // Toggle keyframe options
+            keyframeCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    keyframeOptions.style.display = 'block';
+                    regularOptions.style.display = 'none';
+                } else {
+                    keyframeOptions.style.display = 'none';
+                    regularOptions.style.display = 'block';
+                }
+            });
+            
+            // Preview uploaded video
+            videoFileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    const objectURL = URL.createObjectURL(file);
+                    originalPreview.src = objectURL;
+                    originalPreview.parentElement.style.display = 'block';
+                }
+            });
+            
+            // Handle form submission
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Validate file size (client-side check)
+                const fileInput = videoFileInput.files[0];
+                if (fileInput && fileInput.size > 500 * 1024 * 1024) { // 500MB
+                    alert('File size too large. Please select a file smaller than 500MB.');
+                    return;
+                }
+                
+                // Simulate upload progress with more realistic increments
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 1.5 + 0.5; // Slower, more realistic progress
+                    if (progress > 85) {
+                        clearInterval(interval);
+                    }
+                    progressBar.style.width = `${Math.min(progress, 85)}%`;
+                }, 800);
+                
+                // Show processing indicator with smooth transition
+                uploadForm.style.opacity = '0';
+                setTimeout(() => {
+                    uploadForm.style.display = 'none';
+                    processingIndicator.style.display = 'block';
+                    processingIndicator.style.opacity = '0';
+                    setTimeout(() => {
+                        processingIndicator.style.opacity = '1';
+                    }, 50);
+                }, 300);
+                resultContainer.style.display = 'none';
+                
+                // Create form data
+                const formData = new FormData(uploadForm);
+                
+                // Send to server with timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
+                
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                    signal: controller.signal
+                })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    progressBar.style.width = '100%';
+                    clearInterval(interval);
+                    
+                    if (data.success) {
+                        // Update result views
+                        resultPreview.src = data.output_video;
+                        downloadLink.href = data.output_video;
+                        resultMessage.textContent = data.message;
+                        
+                        // Hide processing, show result with smooth transition
+                        processingIndicator.style.opacity = '0';
+                        setTimeout(() => {
+                            processingIndicator.style.display = 'none';
+                            resultContainer.style.display = 'block';
+                            resultContainer.style.opacity = '0';
+                            setTimeout(() => {
+                                resultContainer.style.opacity = '1';
+                            }, 50);
+                        }, 300);
+                    } else {
+                        throw new Error(data.error || 'Unknown error occurred');
+                    }
+                })
+                .catch(error => {
+                    clearTimeout(timeoutId);
+                    progressBar.style.width = '100%';
+                    clearInterval(interval);
+                    
+                    // Show error with smooth transition
+                    processingIndicator.style.opacity = '0';
+                    setTimeout(() => {
+                        processingIndicator.style.display = 'none';
+                        resultContainer.style.display = 'block';
+                        resultContainer.style.opacity = '0';
+                        
+                        let errorMessage = 'An error occurred while processing your video.';
+                        if (error.name === 'AbortError') {
+                            errorMessage = 'Processing timed out. Please try with a shorter video.';
+                        } else if (error.message.includes('HTTP')) {
+                            errorMessage = `Server error: ${error.message}`;
+                        } else {
+                            errorMessage = `Error: ${error.message}`;
+                        }
+                        
+                        resultMessage.textContent = errorMessage;
+                        resultMessage.parentElement.classList.remove('alert-success');
+                        resultMessage.parentElement.classList.add('alert-danger');
+                        
+                        setTimeout(() => {
+                            resultContainer.style.opacity = '1';
+                        }, 50);
+                    }, 300);
+                });
+            });
+            
+            // Process another video
+            newVideoBtn.addEventListener('click', function() {
+                // Smooth transition back to form
+                resultContainer.style.opacity = '0';
+                setTimeout(() => {
+                    resultContainer.style.display = 'none';
+                    uploadForm.reset();
+                    uploadForm.style.display = 'block';
+                    uploadForm.style.opacity = '0';
+                    progressBar.style.width = '0%';
+                    
+                    // Reset alert classes
+                    resultMessage.parentElement.classList.add('alert-success');
+                    resultMessage.parentElement.classList.remove('alert-danger');
+                    
+                    // Reset preview videos
+                    originalPreview.src = '';
+                    resultPreview.src = '';
+                    
+                    // Reset form options visibility
+                    keyframeOptions.style.display = 'none';
+                    regularOptions.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        uploadForm.style.opacity = '1';
+                    }, 50);
+                }, 300);
+            });
+            
+            // Add smooth transitions to all elements
+            const style = document.createElement('style');
+            style.textContent = `
+                #upload-form, .processing-indicator, .result-container {
+                    transition: opacity 0.3s ease-in-out;
+                }
+                
+                .form-control, .form-range, .btn {
+                    transition: all 0.3s ease;
+                }
+                
+                .card {
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>
